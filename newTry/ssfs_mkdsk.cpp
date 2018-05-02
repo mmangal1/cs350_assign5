@@ -104,7 +104,7 @@ void ssfs_mkdsk::write_fbl(int free_block_list[], char* file_name, int block_siz
 	free_block_list[1] = 1;
 	free_block_list[2] = 1;
 	free_block_list[8] = 1;
-	free_block_list[9] = 1;
+	//free_block_list[9] = 1;
 	free_block_list[10] = 1;
 	
 	fseek(fp, 2*block_size, SEEK_SET);
@@ -130,7 +130,7 @@ void ssfs_mkdsk::write_fbl(int free_block_list[], char* file_name, int block_siz
 		totalcount++;
 		fwrite(&currbyte, 1, 1, fp);
 	}
-	fclose(fp);
+	fclose(fp);/*
 	fp = fopen("test.bin", "rb+");
 	fseek(fp, 2*block_size, SEEK_SET);
 	char c;
@@ -144,7 +144,7 @@ void ssfs_mkdsk::write_fbl(int free_block_list[], char* file_name, int block_siz
 	test = c;
 	cout << test << endl;
 	fclose(fp);	
-	fp = fopen("test.bin", "wb+");
+	fp = fopen("test.bin", "wb+");*/
 }
 
 void ssfs_mkdsk::write_sb(int offset, char* file_name, int block_size, int num_blocks){

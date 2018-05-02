@@ -35,6 +35,7 @@ void loader::initialize(string filename){
 		inode_map[i] = 0;
 	}
 	int end = sb.block_size * sb.num_blocks;
+	cout << "block size: " << sb.block_size << " offset: " << sb.offset << endl;
 	fbl_block_count = (end - sb.offset)/sb.block_size;
 	free_block_list = (int*)malloc(sizeof(int)*fbl_block_count);
 
@@ -67,6 +68,7 @@ void loader::load_inode_map(string filename){
 			count++;
 		}
 	}
+	fclose(fp);
 	
 }
 
