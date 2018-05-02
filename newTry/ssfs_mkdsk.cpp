@@ -42,9 +42,9 @@ ssfs_mkdsk::ssfs_mkdsk(char* file_name, int num_blocks, int block_size){
 		free_block_list[i] = 0;
 	}
 	fclose(fp);
-	write_fbl(free_block_list, file_name, block_size, num_blocks);
-	write_sb(offset, file_name, block_size, num_blocks);
 	write_inode_map(inode_map, file_name, block_size, num_blocks);
+	write_sb(offset, file_name, block_size, num_blocks);
+	write_fbl(free_block_list, file_name, block_size, num_blocks);
 	/*write_fbl(free_block_list, file_name, block_size, num_blocks);
 	write_sb(offset, file_name, block_size, num_blocks);*/
 	delete free_block_list;
@@ -58,17 +58,10 @@ void ssfs_mkdsk::write_inode_map(int inode_map[], char* file_name, int block_siz
 	inode_map[0] = 1;
 	inode_map[1] = 1;
 	inode_map[2] = 1;
-
 	inode_map[8] = 1;
 	inode_map[9] = 1;
 	inode_map[10] = 1;
-/*	inode_map[3] = 0;
-	inode_map[4] = 1;
-	inode_map[5] = 1;
-	inode_map[6] = 0;
-	inode_map[7] = 0;
-	inode_map[255] = 1;
-*/
+	
 	/* go one block to the origin to write inode bitmap 
 	 * Need to write bytes to a file.. so 8 bits at a time*/
 	fseek(fp, block_size, SEEK_SET);
@@ -106,15 +99,25 @@ void ssfs_mkdsk::write_fbl(int free_block_list[], char* file_name, int block_siz
 	int currbyte = 0;
 	int bitcount = 0;
 	int totalcount = 0;
+
+	free_block_list[0] = 1;
+	free_block_list[1] = 1;
+	free_block_list[2] = 1;
+	free_block_list[8] = 1;
+	free_block_list[9] = 1;
+	free_block_list[10] = 1;
+	
 	fseek(fp, 2*block_size, SEEK_SET);
+	cout << "BS: " << block_size << endl;
 
 	for(int i = 0; i < fbl_block_count; i++){
 		currbyte = (currbyte << 1) | free_block_list[i];
 		bitcount++;
 		if(bitcount == 8){
 			totalcount++;
-			fwrite(&currbyte, 8, 1, fp);
-			fseek(fp, block_size+totalcount, SEEK_SET);
+			fwrite(&currbyte, 1, 1, fp);
+			cout << "currbyte" << (currbyte+48) << endl;
+			fseek(fp, 2*block_size+totalcount, SEEK_SET);
 			currbyte = 0;
 			bitcount = 0;
 		}
@@ -125,9 +128,23 @@ void ssfs_mkdsk::write_fbl(int free_block_list[], char* file_name, int block_siz
 			bitcount++;
 		}
 		totalcount++;
-		fwrite(&currbyte, 8, 1, fp);
+		fwrite(&currbyte, 1, 1, fp);
 	}
 	fclose(fp);
+	fp = fopen("test.bin", "rb+");
+	fseek(fp, 2*block_size, SEEK_SET);
+	char c;
+	int test;
+	fread(&c, 1, 1, fp);
+	test = c;
+	cout << test << endl;
+	fseek(fp, 2*block_size+1, SEEK_SET);
+	fread(&c, 1, 1, fp);
+	//c = c+48;
+	test = c;
+	cout << test << endl;
+	fclose(fp);	
+	fp = fopen("test.bin", "wb+");
 }
 
 void ssfs_mkdsk::write_sb(int offset, char* file_name, int block_size, int num_blocks){

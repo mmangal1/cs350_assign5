@@ -57,13 +57,12 @@ void loader::load_inode_map(string filename){
 	
 	int count = 0;
 	for(int i = 0; i < 32; i++){
-		cout << fread(&c, 1, 1, fp) << endl;
-		
-		cout << "test: " << c << endl;
+	//	cout << fread(&c, 1, 1, fp) << endl;
+	//	cout << "test: " << c << endl;
 		bit = c;
-		cout << "---new byte---" << endl;
+	//	cout << "---new byte---" << endl;
 	   	for (int j = 7; j >= 0; j--){
-			cout << bit[j] << endl;
+		//	cout << bit[j] << endl;
 			inode_map[count] = bit[j];
 			count++;
 		}
@@ -75,15 +74,18 @@ void loader::load_inode_map(string filename){
 void loader::load_fbl(string filename){
 	FILE *fp = fopen(filename.c_str(), "rb");
 	fseek(fp, 2*sb.block_size, SEEK_SET);
+	bitset<8> bit;
 	char c;
 	int count = 0;
 	for(int i = 0; i < fbl_block_count/8 + 1; i++){
-		fread(&c, sizeof(c), 1, fp);
+		fread(&c, sizeof(char), 1, fp);
 		if(count == fbl_block_count){
 			break;
 		}
+		bit = c;
 	   	for (int j = 7; j >= 0; j--){
-			free_block_list[count] = ((c >> j) & 1);
+			cout << bit[j] << endl;
+			free_block_list[count] = bit[j];
 			count++;
 		}
 	}
