@@ -56,7 +56,10 @@ void loader::load_inode_map(string filename){
 	
 	int count = 0;
 	for(int i = 0; i < 32; i++){
-		fread(&c, 1, 1, fp);
+		if(fread(&c, 1, 1, fp) != 1){
+			cout << "ERROR" << endl;	
+		};
+		cout << "test: " << c << endl;
 		bit = c;
 		cout << "---new byte---" << endl;
 	   	for (int j = 7; j >= 0; j--){
