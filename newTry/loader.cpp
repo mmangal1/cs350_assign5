@@ -50,15 +50,22 @@ void loader::initialize(string filename){
 /* Loads inode bitmap into memory --> inode_map */
 void loader::load_inode_map(string filename){
 	FILE *fp = fopen(filename.c_str(), "rb");
-	fseek(fp, sb.block_size, SEEK_SET);
+	if(fp == NULL){
+		cout << "fopen failed" << endl;
+	}
+	if(fseek(fp, sb.block_size, SEEK_SET) == -1){
+
+		cout << "fseek failed" << endl;	
+	}
+	cout << sb.block_size << endl;
 	bitset<8> bit;
 	char c;
 	
 	int count = 0;
 	for(int i = 0; i < 32; i++){
-		if(fread(&c, 1, 1, fp) != 1){
-			cout << "ERROR" << endl;	
-		};
+		cout << fread(&c, 1, 1, fp) << endl;
+		//	cout << "ERROR" << endl;	
+		
 		cout << "test: " << c << endl;
 		bit = c;
 		cout << "---new byte---" << endl;
