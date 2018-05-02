@@ -98,9 +98,11 @@ void write_inode_map(){
 
 void write_inode_to_disk(inode *node){
 	FILE *fp = fopen(disk_name.c_str(), "rb+");
-	fseek(fp, sb.offset, SEEK_SET);
-	fwrite(&(node -> file_name), sizeof(node -> file_name), 1, fp);
+	fseek(fp, sb.inode_offset, SEEK_SET);
+	fwrite(&(node -> file_name), 32, 1, fp);
 	fwrite(&(node -> file_size), sizeof(node -> file_size), 1, fp);
+	fwrite(&(node -> total_blocks), sizeof(node -> total_blocks), 1, fp);
+	fwrite(&(node -> index), sizeof(node -> index), 1, fp);
 	for(int i = 0; i < 12; i++){
 		fwrite(&(node -> direct_ptrs[i]), sizeof(node -> file_name), 1, fp);
 	}

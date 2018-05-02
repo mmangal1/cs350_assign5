@@ -113,7 +113,14 @@ void loader::load_inodes(string filename){
 			node1 = new inode();
 			num = *iter;
 			fseek(fp, sb.inode_offset + num*sb.block_size, SEEK_SET);
-			fread(&(node1 -> file_name), sizeof(node1 -> file_name), 1, fp);
+			cout << "sb.inode_offset: " << sb.inode_offset << endl;
+
+			char *test = new char[32];
+			fread(&test, 32, 1, fp);
+			cout << "read in node " << endl;
+			
+			cout << node1 << endl;
+			node1 -> file_name = test;
 			cout << "file name: " << node1 -> file_name << endl;
 			fread(&(node1 -> file_size), sizeof(node1 -> file_size), 1, fp);
 			cout << "file size: " << node1 -> file_size << endl;

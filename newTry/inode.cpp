@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstdio>
 #include <string>
+#include <cstring>
 #include <fstream>
 #include <bitset>
 #include <sys/stat.h>
@@ -14,7 +15,7 @@ void inode::initialize(string filename){
 	
 	struct stat st;
 
-	this->file_name = filename;
+	this->file_name =  filename;
 	cout << this->file_name << endl;
 	
 /*	if(stat(file_name.c_str(), &st) != 0){
