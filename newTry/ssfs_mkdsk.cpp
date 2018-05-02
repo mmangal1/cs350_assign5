@@ -26,7 +26,7 @@ ssfs_mkdsk::ssfs_mkdsk(char* file_name, int num_blocks, int block_size){
 	/* inode map creation in memory 
 	 * Initializing all to unused */
 	for(int i = 0; i < 256; i++){
-		inode_map[i] = 1;
+		inode_map[i] = 0;
 	}
 	/* this is the size of the free block list because the blocks reserved for inodes, inode map, free block list, and super block = 259 */
 	double offset = num_blocks-259;
@@ -41,9 +41,11 @@ ssfs_mkdsk::ssfs_mkdsk(char* file_name, int num_blocks, int block_size){
 		free_block_list[i] = 0;
 	}
 	fclose(fp);
-	write_inode_map(inode_map, file_name, block_size, num_blocks);
 	write_fbl(free_block_list, file_name, block_size, num_blocks);
 	write_sb(offset, file_name, block_size, num_blocks);
+	write_inode_map(inode_map, file_name, block_size, num_blocks);
+	/*write_fbl(free_block_list, file_name, block_size, num_blocks);
+	write_sb(offset, file_name, block_size, num_blocks);*/
 	delete free_block_list;
 }
 
