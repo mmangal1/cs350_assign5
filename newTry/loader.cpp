@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdio>
 #include <string>
+#include <sstream>
 #include <fstream>
 #include <bitset>
 #include "loader.hpp"
@@ -48,27 +49,23 @@ void loader::initialize(string filename){
 
 /* Loads inode bitmap into memory --> inode_map */
 void loader::load_inode_map(string filename){
-	FILE *fp = fopen(filename.c_str(), "rb+");
+	FILE *fp = fopen(filename.c_str(), "rb");
 	fseek(fp, sb.block_size, SEEK_SET);
-	//TODO: Code to read inode bitmap from disk to memory (inode_map)
 	bitset<8> bit;
 	char c;
-//	fread(&c, sizeof(char), 1, fp);
+	
 	int count = 0;
 	for(int i = 0; i < 32; i++){
-		fseek(fp, sb.block_size+i, SEEK_SET);
 		fread(&c, 1, 1, fp);
-		cout << "c : " << c << endl;
 		bit = c;
+		cout << "---new byte---" << endl;
 	   	for (int j = 7; j >= 0; j--){
 			cout << bit[j] << endl;
 			inode_map[count] = bit[j];
 			count++;
 		}
-		bit = NULL;
-		fclose(fp);
 	}
-	//fclose(fp);
+	
 }
 
 /* Loads fbl bitmap into memory --> free_block_list */
