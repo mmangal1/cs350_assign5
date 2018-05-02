@@ -26,10 +26,11 @@ int main(int args, char* argv[]){
 	init->initialize(argv[1]);
 	init->load_inode_map(argv[1]);
 	init->load_fbl(argv[1]);
-	init->load_inodes(argv[1]);
-	for(int i = 0; i < 256; i++){
+	//init->load_inodes(argv[1]);
+/*	for(int i = 0; i < 256; i++){
 		cout << inode_map[i] << endl;
 	}
+*/
 	//delete init;
 	return 0;	 	
 }
