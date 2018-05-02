@@ -51,24 +51,25 @@ void loader::initialize(string filename){
 /* Loads inode bitmap into memory --> inode_map */
 void loader::load_inode_map(string filename){
 	FILE *fp = fopen(filename.c_str(), "rb");
+	if(fp == NULL){
+		cout << "error opening file" << endl;
+	}
 	fseek(fp, sb.block_size, SEEK_SET);
 	cout << sb.block_size << endl;
 	bitset<8> bit;
 	char c;
-	
+	cout << "loading in inode map " << endl;	
 	int count = 0;
 	for(int i = 0; i < 32; i++){
-	//	cout << fread(&c, 1, 1, fp) << endl;
-	//	cout << "test: " << c << endl;
+		fread(&c, 1, 1, fp);
 		bit = c;
-	//	cout << "---new byte---" << endl;
 	   	for (int j = 7; j >= 0; j--){
-		//	cout << bit[j] << endl;
+			cout << bit[j] << " ";
 			inode_map[count] = bit[j];
 			count++;
 		}
 	}
-	fclose(fp);
+	//fclose(fp);
 	
 }
 
@@ -86,7 +87,7 @@ void loader::load_fbl(string filename){
 		}
 		bit = c;
 	   	for (int j = 7; j >= 0; j--){
-			cout << bit[j] << endl;
+			//cout << bit[j] << endl;
 			free_block_list[count] = bit[j];
 			count++;
 		}
@@ -99,6 +100,7 @@ void loader::load_inodes(string filename){
 	vector<int> inodes_to_load;
 	for(int i = 0; i < 256; i++){
 		if(inode_map[i] == 1){
+			cout << "found one: " << i << endl;
 			inodes_to_load.push_back(i);
 		}
 	}

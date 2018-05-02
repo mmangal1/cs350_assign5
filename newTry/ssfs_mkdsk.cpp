@@ -55,13 +55,6 @@ void ssfs_mkdsk::write_inode_map(int inode_map[], char* file_name, int block_siz
 	uint8_t currbyte = 0;
 	int bitcount = 0;
 	int totalcount = 0;
-	inode_map[0] = 1;
-	inode_map[1] = 1;
-	inode_map[2] = 1;
-	inode_map[8] = 1;
-	inode_map[9] = 1;
-	inode_map[10] = 1;
-	
 	/* go one block to the origin to write inode bitmap 
 	 * Need to write bytes to a file.. so 8 bits at a time*/
 	fseek(fp, block_size, SEEK_SET);
@@ -98,15 +91,7 @@ void ssfs_mkdsk::write_fbl(int free_block_list[], char* file_name, int block_siz
 	FILE *fp = fopen(file_name, "r+");
 	int currbyte = 0;
 	int bitcount = 0;
-	int totalcount = 0;
-
-	free_block_list[0] = 1;
-	free_block_list[1] = 1;
-	free_block_list[2] = 1;
-	free_block_list[8] = 1;
-	//free_block_list[9] = 1;
-	free_block_list[10] = 1;
-	
+	int totalcount = 0;	
 	fseek(fp, 2*block_size, SEEK_SET);
 	cout << "BS: " << block_size << endl;
 
@@ -116,7 +101,7 @@ void ssfs_mkdsk::write_fbl(int free_block_list[], char* file_name, int block_siz
 		if(bitcount == 8){
 			totalcount++;
 			fwrite(&currbyte, 1, 1, fp);
-			cout << "currbyte" << (currbyte+48) << endl;
+			//cout << "currbyte" << (currbyte+48) << endl;
 			fseek(fp, 2*block_size+totalcount, SEEK_SET);
 			currbyte = 0;
 			bitcount = 0;

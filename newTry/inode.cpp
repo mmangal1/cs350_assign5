@@ -17,10 +17,10 @@ void inode::initialize(string filename){
 	this->file_name = filename;
 	cout << this->file_name << endl;
 	
-	if(stat(file_name.c_str(), &st) != 0){
+/*	if(stat(file_name.c_str(), &st) != 0){
 		fprintf(stderr, "file_size is 0");
 		exit(1);
-	}
+	}*/
 	this->file_size = 0;
 
 	//lock here
