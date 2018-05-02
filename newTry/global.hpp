@@ -17,6 +17,7 @@ extern void update_free_list(int index, int bit_to_set);
 extern string disk_name;
 extern void write_fbl();
 extern void write_inode_map();
+extern void write_inode_to_disk(inode *node);
 
 /* COMMANDS */
 extern void create(string ssfs_file_name);

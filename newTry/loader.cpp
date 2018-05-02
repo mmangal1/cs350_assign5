@@ -112,7 +112,7 @@ void loader::load_inodes(string filename){
 		for(iter = inodes_to_load.begin(); iter != inodes_to_load.end(); iter++){
 			node1 = new inode();
 			num = *iter;
-			fseek(fp, sb.offset + num*sb.block_size, SEEK_SET);
+			fseek(fp, sb.inode_offset + num*sb.block_size, SEEK_SET);
 			fread(&(node1 -> file_name), sizeof(node1 -> file_name), 1, fp);
 			cout << "file name: " << node1 -> file_name << endl;
 			fread(&(node1 -> file_size), sizeof(node1 -> file_size), 1, fp);

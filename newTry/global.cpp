@@ -96,6 +96,18 @@ void write_inode_map(){
 	fclose(fp);
 }
 
+void write_inode_to_disk(inode *node){
+	FILE *fp = fopen(disk_name.c_str(), "rb+");
+	fseek(fp, sb.offset, SEEK_SET);
+	fwrite(&(node -> file_name), sizeof(node -> file_name), 1, fp);
+	fwrite(&(node -> file_size), sizeof(node -> file_size), 1, fp);
+	for(int i = 0; i < 12; i++){
+		fwrite(&(node -> direct_ptrs[i]), sizeof(node -> file_name), 1, fp);
+	}
+	fwrite(&(node -> indirect_ptrs), sizeof(node -> indirect_ptrs), 1, fp);
+	fwrite(&(node -> dindirect_ptrs), sizeof(node -> dindirect_ptrs), 1, fp);
+}
+
 
 
 /* checks to see if file already exists. if not, it initializes a new inode */
@@ -118,6 +130,7 @@ void create(string ssfs_file_name){
 		inode* node = new inode();
 		node -> initialize(ssfs_file_name);
 		write_inode_map();
+		write_inode_to_disk(node);
 	}
 }
 
