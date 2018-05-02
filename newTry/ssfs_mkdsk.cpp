@@ -12,10 +12,11 @@ ssfs_mkdsk::ssfs_mkdsk(char* file_name, int num_blocks, int block_size){
 	/* Creates disk */
 	FILE *fp = fopen(file_name, "wb");
 	int size = block_size*num_blocks;	
-	char x[size];
+	char *x;
 	/* Superblock creation
 	 * Contains num_blocks and block_size */
 	if(fp != NULL){
+		x = new char[size];
 		/* create the file of size block_size*num_blocks */
 		fwrite(x, block_size, num_blocks, fp);
 	}else{
