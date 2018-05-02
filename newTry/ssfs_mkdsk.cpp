@@ -99,5 +99,11 @@ void ssfs_mkdsk::write_fbl(int free_block_list[], char* file_name, int block_siz
 
 void ssfs_mkdsk::write_sb(int offset, int block_size, int num_blocks, FILE *fp){
 	fseek(fp, 0, SEEK_SET);
-	fprintf(fp, "%d%d%d%d", num_blocks, block_size, offset, (offset - (256 * block_size)));
+	fwrite(&num_blocks, sizeof(int), 1, fp);
+	fwrite(&block_size, sizeof(int), 1, fp);
+	fwrite(&offset, sizeof(int), 1, fp);
+	int inode_offset = offset-(256*block_size);
+	fwrite(&inode_offset, sizeof(int), 1, fp);
+
+//	fprintf(fp, "%d%d%d%d", num_blocks, block_size, offset, (offset - (256 * block_size)));
 }

@@ -17,8 +17,8 @@ using namespace std;
 void loader::load_sb(string filename){
 	FILE *fp = fopen(filename.c_str(), "rb");
 	fseek(fp, 0, SEEK_SET);
+	int num = 0;
 	fread(&(sb.num_blocks), sizeof(int), 1, fp);
-	cout << sb.num_blocks << endl;
 	fseek(fp, 4, SEEK_SET);
 	fread(&(sb.block_size), sizeof(int), 1, fp);
 	fseek(fp, 8, SEEK_SET);
@@ -53,7 +53,6 @@ void loader::load_inode_map(string filename){
 	//TODO: Code to read inode bitmap from disk to memory (inode_map)
 	char c;
 	fread(&c, sizeof(c), 1, fp);
-	cout << "test: " << c << endl;
 	int count = 0;
 	for(int i = 0; i < 32; i++){
 		fread(&c, sizeof(c), 1, fp);
@@ -81,7 +80,7 @@ void loader::load_fbl(string filename){
 			count++;
 		}
 	}
-	fclose(fp);
+	//fclose(fp);
 }
 
 /* Loads inodes into memory --> inode_mem */
