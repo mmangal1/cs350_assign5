@@ -52,7 +52,12 @@ int main(int args, char* argv[]){
 		}
 		if(array[0] == "CREATE"){
 			create(array[1]);
-		}	
+		}
+		else if(array[0] == "DELETE"){
+			delete_file(array[1]);
+		}
 	}
+	write_inode_map();
+	write_fbl();
 	return 0;	 	
 }

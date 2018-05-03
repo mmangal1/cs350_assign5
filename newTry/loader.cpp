@@ -116,41 +116,12 @@ void loader::load_inodes(string filename){
 		FILE *fp = fopen(disk_name.c_str(), "rb+");
 		vector<int>::iterator iter;
 		for(iter = inodes_to_load.begin(); iter != inodes_to_load.end(); iter++){
-	
-		/*	ifstream m;
-			m.open(filename, ios::binary);
-			m.seekg()		
-	*/
 			node1 = new inode();
 			num = *iter;
-			fseek(fp, sb.inode_offset+32, SEEK_SET);
-		//	cout << "sb.inode_offset: " << sb.inode_offset+num*sb.block_size << endl;
-
-			//char *test = new char[32];
+			fseek(fp, sb.inode_offset+num*sb.block_size+32, SEEK_SET);
 			node1 -> file_name = "f1.txt";
-			//char* c = new char[32];
-			//int* c = new int[32];
-			//cout << fread(&(node1 -> file_name), 32, 1, fp) << endl;
-		//	cout << c << endl;
-			//bitset<256> mybits(c);
-	//		cout << "mybits: " << char(mybits.to_ulong()) << endl;
-			//int *numarr = new int[32];
-			/*for(int i = 0; i < 32; i++){
-				numarr[i] = c[i] + 'A';
-				printf("%x ", numarr[i]);
-				//cout << "numarr: " << numarr[i] << endl;
-			}*/
-			
-			//fclose(fp);
-			//fp = fopen(disk_name.c_str(), "rb+");		
-			//cout << disk_name << endl;
-		//:	cout << "read in node " << endl;
-		//	cout << "printing 1" << endl;
-		//	cout << node1 << endl;
-		//	cout << "test" << test << endl;
-		//	node1->file_name = test;
-		//	cout << "printing 2" << endl;
-		//	cout << "file name: " << c << endl;
+			//fread(&(node1 -> file_name), 32, 1, fp);
+			//cout << "file name: " << node1 -> file_name << endl;
 			fread(&(node1 -> file_size), 4, 1, fp);
 			cout << "file size: " << node1 -> file_size << endl;
 			fread(&(node1 -> total_blocks), 4, 1, fp);

@@ -154,6 +154,89 @@ void create(string ssfs_file_name){
 	}
 }
 
+void delete_file(string ssfs_file_name){
+	FILE *fp = fopen(disk_name.c_str(), "rb+");
+	int inode_index = -1;
+	/* find the inode for the given file name*/
+	for(int i = 0; i < 256; i++){
+		if(inode_mem[i] -> file_name == ssfs_file_name){
+			inode_index = i;
+			break; 
+		}
+	}
+	if(inode_index == -1){
+		fprintf(stderr, "the file you wish to delete does not exist on disk\n");
+		exit(1);
+	}
+	int double_block, freeing_block, indirect_block_index, double_indirect_block_index, num, num_d, store_ip, store_dp;
+	double_block = freeing_block = indirect_block_index = double_indirect_block_index = num = num_d = store_ip = store_dp = 0;
+	store_ip = inode_mem[inode_index] -> indirect_ptrs;
+	store_dp = inode_mem[inode_index] -> dindirect_ptrs;
+	if(store_ip != -1){
+		update_free_list(store_ip, 0);
+	}
+	if(store_dp != -1){
+		update_free_list(store_dp, 0);
+	}
+	for(int i = 0; i < 12; i++){
+		if(inode_mem[inode_index] -> direct_ptrs[i] == -1){
+			delete inode_mem[inode_index];
+			update_inode_map(inode_index, 0);
+			return;			
+		}else{
+			update_free_list(inode_mem[inode_index] -> direct_ptrs[i], 0);
+		}
+	}
+	if(inode_mem[inode_index] -> indirect_ptrs == -1){
+		return;			
+	}else{
+		fseek(fp, sb.offset + (inode_mem[inode_index] -> indirect_ptrs)*sb.block_size, SEEK_SET);
+		update_free_list(inode_mem[inode_index] -> indirect_ptrs, 0);
+		for(int i = 0; i < sb.block_size/4; i++){
+			fread(&freeing_block, 4, 1, fp);
+			if(freeing_block == -1){
+				delete inode_mem[inode_index];
+				update_inode_map(inode_index, 0);
+				return;					
+			}else{
+				update_free_list(freeing_block, 0);
+			}
+		}
+	}	
+	if(inode_mem[inode_index] -> dindirect_ptrs == -1){
+		delete inode_mem[inode_index];
+		update_inode_map(inode_index, 0);
+		return;
+	}else{
+		fseek(fp, sb.offset + (inode_mem[inode_index] -> dindirect_ptrs)*sb.block_size, SEEK_SET);
+		update_free_list(inode_mem[inode_index] -> dindirect_ptrs, 0);
+		for(int i = 0; i < sb.block_size/4; i++){
+			fseek(fp, sb.offset + (inode_mem[inode_index] -> dindirect_ptrs)*sb.block_size + i*4, SEEK_SET);
+			fread(&freeing_block, 4, 1, fp);
+			if(freeing_block == -1){
+				delete inode_mem[inode_index];
+				update_inode_map(inode_index, 0);
+				return;
+			}else{
+				fseek(fp, sb.offset + freeing_block*sb.block_size, SEEK_SET);
+				update_free_list(freeing_block, 0);
+				for(int j = 0; j < sb.block_size/4; j++){
+					fread(&freeing_block, 4, 1, fp);
+					if(freeing_block == -1){
+						delete inode_mem[inode_index];
+						update_inode_map(inode_index, 0);
+						return;							
+					}else{
+						update_free_list(freeing_block, 0);
+					}
+				}
+
+			}
+		}
+	}
+	
+	fclose(fp);
+}
 
 void import(string ssfs_file_name, string unix_file_name){
 	
