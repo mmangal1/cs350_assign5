@@ -419,6 +419,7 @@ void write_file_to_disk_using_inode_free_blocks(char ssfs_file_name[], char unix
 			fseek(unix_fp, sb.block_size*i, SEEK_SET);
 			fread(&buff, sb.block_size, 1, unix_fp);
 			fwrite(&buff, sb.block_size, 1, fp);
+			bzero(&buff, sb.block_size);
 		}else if(i < (sb.block_size / 4) + 13){/* add 13 to account for the free block that is used to hold the indirect block*/
 			if(inode_mem[inode_index]->indirect_ptrs != -1){
 				fseek(fp, inode_mem[inode_index]->indirect_ptrs + (indirect_block_index * sizeof(int)), SEEK_SET);
