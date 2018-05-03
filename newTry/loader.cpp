@@ -69,7 +69,7 @@ void loader::load_inode_map(string filename){
 			count++;
 		}
 	}
-	//fclose(fp);
+	fclose(fp);
 	
 }
 
@@ -118,10 +118,12 @@ void loader::load_inodes(string filename){
 			char *test = new char[32];
 			fread(&test, 32, 1, fp);
 			cout << "read in node " << endl;
-			
+			cout << "printing 1" << endl;
 			cout << node1 << endl;
-			node1 -> file_name = test;
-			cout << "file name: " << node1 -> file_name << endl;
+		//	cout << "test" << test << endl;
+			node1->file_name = test;
+			cout << "printing 2" << endl;
+			cout << "file name: " << node1->file_name << endl;
 			fread(&(node1 -> file_size), sizeof(node1 -> file_size), 1, fp);
 			cout << "file size: " << node1 -> file_size << endl;
 			fread(&(node1 -> total_blocks), sizeof(node1 -> total_blocks), 1, fp);
@@ -161,5 +163,6 @@ void loader::load_inodes(string filename){
 				cout << indArr[i] << endl;
 			}
 		}
+		fclose(fp);
 	}
 }

@@ -23,7 +23,7 @@ global.o: global.cpp global.hpp super_block.hpp
 
 clean:
 	rm -f *.o
-	rm -f *.txt
+#	rm -f *.txt
 	rm -f *.bin
 	rm -f ssfs_mkdsk
 	rm -f ssfs
