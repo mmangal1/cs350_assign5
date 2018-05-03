@@ -277,9 +277,9 @@ void import(char ssfs_file_name[], char unix_file_name[]){
 		delete_file(ssfs_file_name);
 	}
 
-	create(ssfs_file_name);/* this will initialize a node to hold the contents of the file*/
-	inode_index = find_inode_index(ssfs_file_name);
-
+	create(unix_file_name);/* this will initialize a node to hold the contents of the file*/
+	inode_index = find_inode_index(unix_file_name);
+	//cout << "yo this is the file name of the index " << inode_mem[inode_index] -> file_name << endl;
 
 	struct stat st;	
 	if(stat(unix_file_name, &st) != 0){
@@ -330,60 +330,54 @@ void import(char ssfs_file_name[], char unix_file_name[]){
 
 	//number if ints an indirect block can hold
 	int num_indirect = sb.block_size / 4;
-	cout << "num_indirect = " << num_indirect << endl;
+	//cout << "num_indirect = " << num_indirect << endl;
 	int count = 0; // determine if we need to move to the next indirect block
 	int indirect_block;
 	int next = 0;
-	int inext = 0;
+	int block_val;
+	//cout << "import function " << num_blocks << endl;
 	for(int j = 0; j < num_blocks; j++){
+		block_val = (sb.offset + ( freeBlocks.at(j) * sb.block_size));
+		//cout << "value in block_val:   " << block_val << endl;
 		if(j < 12){
-			inode_mem[inode_index]->direct_ptrs[j] = freeBlocks.at(j);
+			inode_mem[inode_index]->direct_ptrs[j] = block_val;
+			//cout << "inode direct ptr value   " << inode_mem[inode_index]->direct_ptrs[j] << endl;
 		}else if(j >= 12 && j < num_indirect + 13){
 			// write the next free block to the indirect block
 			if(j == 12){
-				inode_mem[inode_index]->indirect_ptrs = freeBlocks.at(j);
+				inode_mem[inode_index]->indirect_ptrs = block_val;
 				// will move to the indirect block to begin writing
-				fseek(fp, (inode_mem[inode_index]->indirect_ptrs * sb.block_size), SEEK_SET);
+				fseek(fp, inode_mem[inode_index]->indirect_ptrs , SEEK_SET);//TODO changing this shit
 			}else{
 	//TODO			//write free blocks into the ptr's block
 				// pass to the scheduler thread to write to the disk file
-
-				char *buff = new char[5];
-				int block_to_write = sb.offset + freeBlocks.at(j)*sb.block_size;
-				string s = to_string(block_to_write);
-				strcpy(buff, s.c_str());
-				shared *myShared = set_shared_struct(1, inode_mem[inode_index]->indirect_ptrs * sb.block_size + (sb.block_size * inext), buff);
-				add_to_buffer(myShared);	
-				inext++;
+				//cout << " i need to know this   " << block_val << endl;
+				fwrite(&block_val, sizeof(int), 1, fp);
 			}
 			
 		}else{
 			if(j == num_indirect + 13){
-				cout << "we got here" << endl;
-				inode_mem[inode_index]->dindirect_ptrs = freeBlocks.at(j);
+				//cout << "we got here" << endl;
+				inode_mem[inode_index]->dindirect_ptrs = block_val;
 				// will move to the indirect block to begin writing
-				fseek(fp, (inode_mem[inode_index]->dindirect_ptrs * sb.block_size), SEEK_SET);
+				//fseek(fp, (inode_mem[inode_index]->dindirect_ptrs * sb.block_size), SEEK_SET); changed
+				fseek(fp, inode_mem[inode_index]->dindirect_ptrs, SEEK_SET);
 			}else{
 		//TODO		//write free blocks into the ptr's block
 				// pass to the scheduler thread to write to the disk file
 				//have to move to next indirect block
 				if(count == 0/*count % num_indirect == 0*/){
 				//cout << " in here???" << endl;
-					fseek(fp, (inode_mem[inode_index]->dindirect_ptrs * sb.block_size) + (sb.block_size * next), SEEK_SET);
-					/*shared *myShared;
-					myShared -> operation = 1;
-					char *buff = new char[sb.block_size];
-					strcpy(buff, (freeBlocks.at(j)));
-					myShared -> data = buff;
-					myShared -> block_num = inode_mem[inode_index]->dindirect_ptrs * sb.block_size + (sb.block_size * next);*/
-				       		
-					/*fwrite(&freeBlocks.at(j), sizeof(int), 1, fp);
-					indirect_block = freeBlocks.at(j);
-					fseek(fp, (freeBlocks.at(j) * sb.block_size), SEEK_SET);*/
+					//fseek(fp, (inode_mem[inode_index]->dindirect_ptrs * sb.block_size) + (sb.block_size * next), SEEK_SET);
+					fseek(fp, inode_mem[inode_index]->dindirect_ptrs + (sb.block_size * next), SEEK_SET);
+					fwrite(&block_val, sizeof(int), 1, fp);
+					indirect_block = block_val;
+					//fseek(fp, (freeBlocks.at(j) * sb.block_size), SEEK_SET);
+					fseek(fp, freeBlocks.at(j), SEEK_SET);
 					next++;
 				}else{
 					//cout << freeBlocks.at(j) << "double indirect " << endl;
-					//fwrite(&freeBlocks.at(j), sizeof(int), 1, fp);
+					fwrite(&block_val, sizeof(int), 1, fp);
 					//count++;
 				}
 				count++;
@@ -393,13 +387,20 @@ void import(char ssfs_file_name[], char unix_file_name[]){
 			
 		}
 	}
+/*
+	if(file size % block size ==0){
+		block_val = -1;
+		fwrite(&block_val, sizeof(int), 1, fp);
+	}*/
 /* finished writing the free blocks into the inode*/
 
 
 /* write the data of the unix file by going through the inode and writing a block at a time based on the ptrs*/
-	write_file_to_disk_using_inode_free_blocks(ssfs_file_name, unix_file_name);
 	fclose(fp);//close the disk file
+	write_file_to_disk_using_inode_free_blocks(ssfs_file_name, unix_file_name);
+	//fclose(fp);//close the disk file
 }
+
 
 
 
@@ -407,10 +408,11 @@ void import(char ssfs_file_name[], char unix_file_name[]){
 
 //HELPER FUNCTION TO WRITE THE CONTENTS OF A FILE TO THE DISK BASED ON THE BLOCK PTRS IN ITS INODE
 void write_file_to_disk_using_inode_free_blocks(char ssfs_file_name[], char unix_file_name[]){
+	//cout << "inside write_ " << endl;
 	int inode_index = -1;
 	/* find the inode for the given file name*/
 	for(int i = 0; i < 256; i++){
-		if(inode_mem[i] != NULL && strcmp(inode_mem[i] -> file_name, ssfs_file_name) == 0){
+		if(inode_mem[i] != NULL && strcmp(inode_mem[i] -> file_name, unix_file_name) == 0){
 			cout << "found one: " << i << endl;
 			inode_index = i;
 			break; 
@@ -432,26 +434,32 @@ void write_file_to_disk_using_inode_free_blocks(char ssfs_file_name[], char unix
 	FILE* unix_fp = fopen(unix_file_name, "r");
 	char buff[sb.block_size];
 	//for(int i = 0; i < inode_map[inode_index].file_size; i++){ changed this line
+	//cout << "indirect ptr: " << inode_mem[inode_index]->indirect_ptrs << endl;
 	for(int i = 0; i < inode_mem[inode_index]->total_blocks; i++){
 		if(i < 12){
-			cout << "dir ptr: " << inode_mem[inode_index]->direct_ptrs[i] << endl;
-			fseek(fp, sb.offset + sb.block_size*inode_mem[inode_index]->direct_ptrs[i], SEEK_SET);
+			//cout << "dir ptr: " << inode_mem[inode_index]->direct_ptrs[i] << endl;
+			//fseek(fp, sb.offset + sb.block_size*inode_mem[inode_index]->direct_ptrs[i], SEEK_SET);
+			fseek(fp, inode_mem[inode_index]->direct_ptrs[i], SEEK_SET);
 			fseek(unix_fp, sb.block_size*i, SEEK_SET);
 			fread(&buff, sb.block_size, 1, unix_fp);
-			fwrite(&buff, sb.block_size, 1, fp);
+			//cout << "the buffer contains:   " <<  buff << endl;
+			fwrite(&buff , sb.block_size, 1, fp);
 			bzero(&buff, sb.block_size);
 		}else if(i < (sb.block_size / 4) + 13){/* add 13 to account for the free block that is used to hold the indirect block*/
 			if(inode_mem[inode_index]->indirect_ptrs != -1){
 				fseek(fp, inode_mem[inode_index]->indirect_ptrs + (indirect_block_index * sizeof(int)), SEEK_SET);
+	//cout << "value we are seeking to in indirect block:  " << inode_mem[inode_index]->indirect_ptrs + (indirect_block_index * sizeof(int)) << endl;
 				fread(&(freeing_block), sizeof(freeing_block), 1, fp);
-				fseek(fp, freeing_block, SEEK_SET);
+				fseek(fp, freeing_block, SEEK_SET);//
 				fread(&buff, sb.block_size, 1, unix_fp);
 				fwrite(&buff, sb.block_size, 1, fp);
+				//cout << " valuse of the freeing block  " << freeing_block << endl;
+				//cout << "the indirect buffer contains:   " <<  buff << endl;
 				indirect_block_index++; /* increment the position in the indirect block*/
 			}else break;
-			if(i == (sb.block_size / 4) + 12){
+			/*if(i == (sb.block_size / 4) + 12){
 				indirect_block_index = 0;
-			}
+			}*/
 		}else{
 			if(inode_mem[inode_index]->dindirect_ptrs != -1){
 				fseek(fp, inode_mem[inode_index]->dindirect_ptrs + (indirect_block_index * sizeof(int)), SEEK_SET);/*move to index in dindirect block*/
@@ -470,11 +478,97 @@ void write_file_to_disk_using_inode_free_blocks(char ssfs_file_name[], char unix
 			}else break;
 			//if(i == (block_size / 4) + 11) free_block_list[inode_map[inode_index].indirect_ptrs = 0; /* free the indirect_ptrs block*/
 		}
+		bzero(&buff, sb.block_size);
 	}
 /* all blocks should be written*/
 
+	fclose(fp);
+}
+
+
+
+
+/*
+CAT <SSFS file name>
+This	command	displays	the	contents	of	<SSFS file name> on	the	screen,	just	like	the	unix	cat	command.
+*/
+void cat(char ssfs_file_name[]){
+	//cout << "entering cat function" << endl;
+
+	int inode_index = find_inode_index(ssfs_file_name);
+	if(inode_index == -1){
+		fprintf(stderr, "the file you wish to cat does not have an inode that exists on disk");
+		exit(1);
+	}
+
+
+	/* look at file size blocks and free them*/
+	//int double_count;
+	int double_block;
+	int freeing_block;
+	int indirect_block_index = 0;
+	int double_indirect_block_index = 0;
+/*write data to blocks associated with the inode*/
+	FILE* fp = fopen(disk_name.c_str(), "rb+");
+	cout << "file: " << ssfs_file_name << endl;
+	char buff[sb.block_size];
+//cout << "this far in the cat function" << endl;
+cout << "total blocks in the file we cat  " << inode_mem[inode_index]->total_blocks << endl;
+	//for(int i = 0; i < inode_map[inode_index].file_size; i++){ changed this line
+	for(int i = 0; i < inode_mem[inode_index]->total_blocks; i++){
+		//bzero(&buff, sb.block_size);
+		if(i < 12){
+			//cout << "dir ptr: " << inode_mem[inode_index]->direct_ptrs[i] << endl;
+			//fseek(fp, sb.offset + sb.block_size*inode_mem[inode_index]->direct_ptrs[i], SEEK_SET);
+			 
+			fseek(fp, inode_mem[inode_index]->direct_ptrs[i], SEEK_SET);
+			fread(&buff, sb.block_size, 1, fp);
+			//cout << "contents of the cat buffer   " <<  buff << endl;
+			cout << buff;
+			//bzero(&buff, sb.block_size);
+		}else if(i < (sb.block_size / 4) + 12){// add 12 ??TODO check that this is enough iterations
+			if(inode_mem[inode_index]->indirect_ptrs != -1){
+				fseek(fp, inode_mem[inode_index]->indirect_ptrs + (indirect_block_index * sizeof(int)), SEEK_SET);
+				fread(&(freeing_block), sizeof(freeing_block), 1, fp);
+				fseek(fp, freeing_block, SEEK_SET);
+				fread(&buff, sb.block_size, 1, fp);
+				cout << buff << endl;
+				indirect_block_index++; // increment the position in the indirect block
+			}else break;
+			if(i == (sb.block_size / 4) + 12){
+				indirect_block_index = 0;
+			}
+		}else{
+			cout << " in the double indirect block " << endl;
+			if(inode_mem[inode_index]->dindirect_ptrs != -1){
+				fseek(fp, inode_mem[inode_index]->dindirect_ptrs + (indirect_block_index * sizeof(int)), SEEK_SET);//move to index in dindirect block
+				fread(&(double_block), sizeof(double_block), 1, fp);//read indirect block ptr
+				fseek(fp, double_block + (double_indirect_block_index * sizeof(int)), SEEK_SET);// move index in indirect block
+				fread(&(freeing_block), sizeof(freeing_block), 1, fp);// read block number to free in the direct block
+				fseek(fp, freeing_block, SEEK_SET);
+				fread(&buff, sb.block_size, 1, fp);
+				cout << buff << endl;
+				double_indirect_block_index++; //move to next index in indirect block
+				if(double_indirect_block_index == sb.block_size /4){ //if we have read an entire indirect block
+					double_indirect_block_index = 0; //prepare to read first int in the next indirect block
+					indirect_block_index++; //move to next index in double indirect block
+					free_block_list[double_block] = 0; // free indirect block that we have completely read
+				}
+			}else break;
+			//if(i == (block_size / 4) + 11) free_block_list[inode_map[inode_index].indirect_ptrs = 0; // free the indirect_ptrs block
+		}
+		bzero(&buff, sb.block_size);
+	}
+
+/* all blocks should be written*/
+
+cout << endl;
+	fclose(fp);
+
+
 
 }
+
 
 
 

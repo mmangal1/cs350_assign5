@@ -35,7 +35,7 @@ extern shared* set_shared_struct(int operation, int block_num, char *data);
 /* COMMANDS */
 extern void create(char ssfs_file_name[]);
 extern void import(char ssfs_file_name[], char unix_file_name[]);
-extern void cat(string ssfs_file_name);
+extern void cat(char ssfs_file_name[]);
 extern void delete_file(char ssfs_file_name[]);
 extern void write(string ssfs_file_name, char c, int start_byte, int num_bytes);
 extern void read(string ssfs_file_name, int start_byte, int num_bytes);

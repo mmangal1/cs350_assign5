@@ -80,6 +80,11 @@ void* parser(void *file){
 			myShared -> operation = 2;
 			add_to_buffer(myShared);
 		}
+		else if(array[0] == "CAT"){
+			char test[33];
+			strcpy(test, array[1].c_str());
+			cat(test);
+		}
 	}
 	cout << "out " << endl;
 	in.close();
