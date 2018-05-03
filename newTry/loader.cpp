@@ -37,7 +37,7 @@ void loader::initialize(string filename){
 	int end = sb.block_size * sb.num_blocks;
 	cout << "block size: " << sb.block_size << " offset: " << sb.offset << endl;
 	fbl_block_count = (end - sb.offset)/sb.block_size;
-	free_block_list = (int*)malloc(sizeof(int)*fbl_block_count);
+	free_block_list = new int[fbl_block_count+1];//(int*)malloc(sizeof(int)*fbl_block_count);
 
 	for(int i = 0; i < fbl_block_count; i++){
 		free_block_list[i] = 0;
@@ -70,12 +70,14 @@ void loader::load_inode_map(string filename){
 		}
 	}
 	fclose(fp);
-	
 }
 
 /* Loads fbl bitmap into memory --> free_block_list */
 void loader::load_fbl(string filename){
 	FILE *fp = fopen(filename.c_str(), "rb");
+	if(fp == NULL){
+		cout << "error opening file" << endl;
+	}
 	fseek(fp, 2*sb.block_size, SEEK_SET);
 	bitset<8> bit;
 	char c;
@@ -87,6 +89,10 @@ void loader::load_fbl(string filename){
 		}
 		bit = c;
 	   	for (int j = 7; j >= 0; j--){
+			if(count == fbl_block_count){
+				fclose(fp);
+				return;
+			}
 			//cout << bit[j] << endl;
 			free_block_list[count] = bit[j];
 			count++;
@@ -107,36 +113,57 @@ void loader::load_inodes(string filename){
 	if(inodes_to_load.size() != 0){
 		inode *node1;
 		int num = 0;
-		FILE *fp = fopen(filename.c_str(), "rb");
+		FILE *fp = fopen(disk_name.c_str(), "rb+");
 		vector<int>::iterator iter;
 		for(iter = inodes_to_load.begin(); iter != inodes_to_load.end(); iter++){
+	
+		/*	ifstream m;
+			m.open(filename, ios::binary);
+			m.seekg()		
+	*/
 			node1 = new inode();
 			num = *iter;
-			fseek(fp, sb.inode_offset + num*sb.block_size, SEEK_SET);
-			cout << "sb.inode_offset: " << sb.inode_offset << endl;
+			fseek(fp, sb.inode_offset+32, SEEK_SET);
+		//	cout << "sb.inode_offset: " << sb.inode_offset+num*sb.block_size << endl;
 
-			char *test = new char[32];
-			fread(&test, 32, 1, fp);
-			cout << "read in node " << endl;
-			cout << "printing 1" << endl;
-			cout << node1 << endl;
+			//char *test = new char[32];
+			node1 -> file_name = "f1.txt";
+			//char* c = new char[32];
+			//int* c = new int[32];
+			//cout << fread(&(node1 -> file_name), 32, 1, fp) << endl;
+		//	cout << c << endl;
+			//bitset<256> mybits(c);
+	//		cout << "mybits: " << char(mybits.to_ulong()) << endl;
+			//int *numarr = new int[32];
+			/*for(int i = 0; i < 32; i++){
+				numarr[i] = c[i] + 'A';
+				printf("%x ", numarr[i]);
+				//cout << "numarr: " << numarr[i] << endl;
+			}*/
+			
+			//fclose(fp);
+			//fp = fopen(disk_name.c_str(), "rb+");		
+			//cout << disk_name << endl;
+		//:	cout << "read in node " << endl;
+		//	cout << "printing 1" << endl;
+		//	cout << node1 << endl;
 		//	cout << "test" << test << endl;
-			node1->file_name = test;
-			cout << "printing 2" << endl;
-			cout << "file name: " << node1->file_name << endl;
-			fread(&(node1 -> file_size), sizeof(node1 -> file_size), 1, fp);
+		//	node1->file_name = test;
+		//	cout << "printing 2" << endl;
+		//	cout << "file name: " << c << endl;
+			fread(&(node1 -> file_size), 4, 1, fp);
 			cout << "file size: " << node1 -> file_size << endl;
-			fread(&(node1 -> total_blocks), sizeof(node1 -> total_blocks), 1, fp);
+			fread(&(node1 -> total_blocks), 4, 1, fp);
 			cout << "total_blocks: " << node1 -> total_blocks << endl;
-			fread(&(node1 -> index), sizeof(node1 -> index), 1, fp);
+			fread(&(node1 -> index), 4, 1, fp);
 			cout << "index: " << node1 -> index << endl;
 			for(int i = 0; i < 12; i++){
-				fread(&(node1 -> direct_ptrs[i]), sizeof(node1 -> file_name), 1, fp);
+				fread(&(node1 -> direct_ptrs[i]), 4, 1, fp);
 				cout << "dir ptr: " << i << " " << node1 -> direct_ptrs[i] << endl;
 			}
-			fread(&(node1 -> indirect_ptrs), sizeof(node1 -> indirect_ptrs), 1, fp);
+			fread(&(node1 -> indirect_ptrs), 4, 1, fp);
 			cout << "indir ptr: " << node1 -> indirect_ptrs << endl;
-			fread(&(node1 -> dindirect_ptrs), sizeof(node1 -> dindirect_ptrs), 1, fp);
+			fread(&(node1 -> dindirect_ptrs), 4, 1, fp);
 			cout << "dindir ptr: " << node1 -> dindirect_ptrs << endl;
 			inode_mem.at(node1->index) = node1;
 			cout << endl << "values in the indirect block" << endl;
@@ -145,20 +172,20 @@ void loader::load_inodes(string filename){
 			for(int i = 0; i < (sb.block_size/4); i++){
 				indArr[i] = 0;
 			}
-			fread(&(indArr), sizeof(int), (sb.block_size/4), fp);
+			fread(&(indArr), 4, (sb.block_size/4), fp);
 			for(int i = 0; i < (sb.block_size/4); i++){
 				cout << indArr[i] << endl;
 			}
 			cout << endl << "values in the double indirect block" << endl;
 			fseek(fp, (node1 -> dindirect_ptrs * sb.block_size), SEEK_SET);
 			int iblock = 0;
-			fread(&(iblock), sizeof(int), 1, fp);
+			fread(&(iblock), 4, 1, fp);
 			cout << "the value in first di " << iblock << endl;
 			fseek(fp, (iblock * sb.block_size), SEEK_SET);
 			for(int i = 0; i < (sb.block_size/4); i++){
 				indArr[i] = 0;
 			}
-			fread(&(indArr), sizeof(int), (sb.block_size/4), fp);
+			fread(&(indArr), 4, (sb.block_size/4), fp);
 			for(int i = 0; i < (sb.block_size/4); i++){
 				cout << indArr[i] << endl;
 			}

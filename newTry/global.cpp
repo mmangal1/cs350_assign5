@@ -1,5 +1,6 @@
 #include "global.hpp"
 #include <iostream>
+#include <bits/stdc++.h>
 superblock sb;
 int inode_map[256];
 vector<inode*> inode_mem;
@@ -98,16 +99,33 @@ void write_inode_map(){
 
 void write_inode_to_disk(inode *node){
 	FILE *fp = fopen(disk_name.c_str(), "rb+");
-	fseek(fp, sb.inode_offset, SEEK_SET);
-	fwrite(&(node -> file_name), 32, 1, fp);
-	fwrite(&(node -> file_size), sizeof(node -> file_size), 1, fp);
-	fwrite(&(node -> total_blocks), sizeof(node -> total_blocks), 1, fp);
-	fwrite(&(node -> index), sizeof(node -> index), 1, fp);
-	for(int i = 0; i < 12; i++){
-		fwrite(&(node -> direct_ptrs[i]), sizeof(node -> file_name), 1, fp);
+	if(fp == NULL){
+		cout << "exiting" << endl;
+		exit(1);
 	}
-	fwrite(&(node -> indirect_ptrs), sizeof(node -> indirect_ptrs), 1, fp);
-	fwrite(&(node -> dindirect_ptrs), sizeof(node -> dindirect_ptrs), 1, fp);
+	cout << "sb.inode_offset" << sb.inode_offset << endl;
+	fseek(fp, sb.inode_offset, SEEK_SET);
+/*	char myChar[33];
+	string s = node -> file_name;
+	strcpy(myChar, s.c_str());
+	fwrite(&(myChar), 32, 1, fp);
+*/
+	fwrite(&(node -> file_name), 32, 1, fp);
+	fwrite(&(node -> file_size), 4, 1, fp);
+	fwrite(&(node -> total_blocks), 4, 1, fp);
+	fwrite(&(node -> index), 4, 1, fp);
+	for(int i = 0; i < 12; i++){
+		fwrite(&(node -> direct_ptrs[i]), 4, 1, fp);
+	}
+	fwrite(&(node -> indirect_ptrs), 4, 1, fp);
+	fwrite(&(node -> dindirect_ptrs), 4, 1, fp);
+	fclose(fp);
+	fp = fopen(disk_name.c_str(), "rb+");
+	fseek(fp, sb.inode_offset, SEEK_SET);
+	node -> file_name = "not the right file";
+	fread(&(node -> file_name), 32, 1, fp);
+	cout << "file name: " << node -> file_name << endl;
+	fclose(fp);
 }
 
 
