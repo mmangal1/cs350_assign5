@@ -15,8 +15,8 @@ using namespace std;
 
 
 /* Loads superblock into sb struct */
-void loader::load_sb(string filename){
-	FILE *fp = fopen(filename.c_str(), "rb");
+void loader::load_sb(char* filename){
+	FILE *fp = fopen(filename, "rb");
 	fseek(fp, 0, SEEK_SET);
 	int num = 0;
 	fread(&(sb.num_blocks), sizeof(int), 1, fp);
@@ -30,7 +30,7 @@ void loader::load_sb(string filename){
 }
 
 /* Initializes all values to 0 and NULL */
-void loader::initialize(string filename){
+void loader::initialize(char* filename){
 	for(int i = 0; i < 256; i++){
 		inode_map[i] = 0;
 	}
@@ -49,22 +49,16 @@ void loader::initialize(string filename){
 }
 
 /* Loads inode bitmap into memory --> inode_map */
-void loader::load_inode_map(string filename){
-	FILE *fp = fopen(filename.c_str(), "rb");
-	if(fp == NULL){
-		cout << "error opening file" << endl;
-	}
+void loader::load_inode_map(char* filename){
+	FILE *fp = fopen(filename, "rb");
 	fseek(fp, sb.block_size, SEEK_SET);
-	cout << sb.block_size << endl;
 	bitset<8> bit;
 	char c;
-	cout << "loading in inode map " << endl;	
 	int count = 0;
 	for(int i = 0; i < 32; i++){
 		fread(&c, 1, 1, fp);
 		bit = c;
 	   	for (int j = 7; j >= 0; j--){
-			cout << bit[j] << " ";
 			inode_map[count] = bit[j];
 			count++;
 		}
@@ -73,11 +67,8 @@ void loader::load_inode_map(string filename){
 }
 
 /* Loads fbl bitmap into memory --> free_block_list */
-void loader::load_fbl(string filename){
-	FILE *fp = fopen(filename.c_str(), "rb");
-	if(fp == NULL){
-		cout << "error opening file" << endl;
-	}
+void loader::load_fbl(char* filename){
+	FILE *fp = fopen(filename, "rb");
 	fseek(fp, 2*sb.block_size, SEEK_SET);
 	bitset<8> bit;
 	char c;
@@ -93,7 +84,6 @@ void loader::load_fbl(string filename){
 				fclose(fp);
 				return;
 			}
-			//cout << bit[j] << endl;
 			free_block_list[count] = bit[j];
 			count++;
 		}
@@ -102,7 +92,7 @@ void loader::load_fbl(string filename){
 }
 
 /* Loads inodes into memory --> inode_mem */
-void loader::load_inodes(string filename){
+void loader::load_inodes(char *filename){
 	vector<int> inodes_to_load;
 	for(int i = 0; i < 256; i++){
 		if(inode_map[i] == 1){
@@ -116,12 +106,12 @@ void loader::load_inodes(string filename){
 		FILE *fp = fopen(disk_name.c_str(), "rb+");
 		vector<int>::iterator iter;
 		for(iter = inodes_to_load.begin(); iter != inodes_to_load.end(); iter++){
-			node1 = new inode();
+			node1 = (inode*)malloc(sizeof(*node1));
 			num = *iter;
-			fseek(fp, sb.inode_offset+num*sb.block_size+32, SEEK_SET);
-			node1 -> file_name = "f1.txt";
-			//fread(&(node1 -> file_name), 32, 1, fp);
-			//cout << "file name: " << node1 -> file_name << endl;
+			fseek(fp, sb.inode_offset+num*sb.block_size, SEEK_SET);
+			//node1 -> file_name = "f1.txt";
+			fread(&(node1 -> file_name), 32, 1, fp);
+			cout << "file name: " << node1 -> file_name << endl;
 			fread(&(node1 -> file_size), 4, 1, fp);
 			cout << "file size: " << node1 -> file_size << endl;
 			fread(&(node1 -> total_blocks), 4, 1, fp);

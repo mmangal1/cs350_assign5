@@ -3,7 +3,10 @@
 #include <stdio.h>
 #include "super_block.hpp"
 #include <vector>
+#include <string>
 #include "inode.hpp"
+
+using namespace std;
 
 extern superblock sb;
 extern int inode_map[256];
@@ -17,17 +20,19 @@ extern void update_free_list(int index, int bit_to_set);
 extern string disk_name;
 extern void write_fbl();
 extern void write_inode_map();
-extern void write_inode_to_disk(inode *node);
+extern void write_inode_to_disk(inode *node, int index);
 
 /* COMMANDS */
-extern void create(string ssfs_file_name);
-extern void import(string ssfs_file_name, string unix_file_name);
+extern void create(char ssfs_file_name[]);
+extern void import(char ssfs_file_name[], char unix_file_name[]);
 extern void cat(string ssfs_file_name);
-extern void delete_file(string ssfs_file_name);
+extern void delete_file(char ssfs_file_name[]);
 extern void write(string ssfs_file_name, char c, int start_byte, int num_bytes);
 extern void read(string ssfs_file_name, int start_byte, int num_bytes);
 extern void list();
 extern void shutdown();
 
-
+/* HELPER FUNCTIONS */
+void write_file_to_disk_using_inode_free_blocks(char ssfs_file_name[], char unix_file_name[]);
+int find_inode_index(char ssfs_file_name[]);
 #endif

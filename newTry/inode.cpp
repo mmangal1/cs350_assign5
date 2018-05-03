@@ -10,8 +10,8 @@
 #include "inode.hpp"
 
 using namespace std;
-
-void inode::initialize(string filename){
+#if 0
+void inode::initialize(char *filename){
 	
 	struct stat st;
 
@@ -49,7 +49,7 @@ void inode::initialize(string filename){
 
 
 
-
+#endif
 
 
 
