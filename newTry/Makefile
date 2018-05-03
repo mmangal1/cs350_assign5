@@ -7,19 +7,19 @@ ssfs_mkdsk.o: ssfs_mkdsk.cpp ssfs_mkdsk.hpp
 	g++ -g -c ssfs_mkdsk.cpp -o ssfs_mkdsk.o
 
 main_driver: driver.o loader.o inode.o global.o
-	g++ driver.o loader.o inode.o global.o -g -o ssfs
+	g++ driver.o loader.o inode.o global.o -g -pthread -o ssfs
 
 driver.o: driver.cpp global.hpp loader.hpp
-	g++ -g -c driver.cpp
+	g++ -g -c -pthread driver.cpp
 
 loader.o: loader.cpp loader.hpp global.hpp inode.hpp
-	g++ -g -c loader.cpp
+	g++ -g -c -pthread loader.cpp
 
 inode.o: inode.cpp global.hpp inode.hpp
-	g++ -g -c inode.cpp
+	g++ -g -c -pthread inode.cpp
 
 global.o: global.cpp global.hpp super_block.hpp
-	g++ -g -c global.cpp 
+	g++ -g -c -pthread global.cpp 
 
 clean:
 	rm -f *.o

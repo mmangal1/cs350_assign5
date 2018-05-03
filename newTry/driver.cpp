@@ -4,55 +4,39 @@
 #include <sstream>
 #include <fstream>
 #include <cstring>
+#include <pthread.h>
+#include <queue>
 #include "loader.hpp"
 #include "global.hpp"
 
 using namespace std;
 
-int main(int args, char* argv[]){
-	
-	if(args < 2 || args > 6){
-		fprintf(stderr, "invalid usage\n");
-		exit(1);
-	}else{
-		//TODO: fix this
-		//ifstream ifile(argv[1]);
-		/*if(!ifile){
-			fprintf(stderr, "disk file does not exist\n");
-		}*/
-	}
-	disk_name = argv[1];
-	
-	loader* init = new loader();
-	init->load_sb(argv[1]);
-	init->initialize(argv[1]);
-	init->load_inode_map(argv[1]);
-	init->load_fbl(argv[1]);
-	init->load_inodes(argv[1]);
-	delete init;
-
-	/*if(args == 3){
-		char test[8] = "foo.txt";
-		create(test);
-		char test1[9] = "foo1.txt";
-		create(test1);
-		char test2[9] = "foo2.txt";
-		create(test2);
-		char test3[9] = "foo3.txt";
-		create(test3);
-	}*/
-
-	/*FILE *fp = fopen(argv[2], "r");
-	char line[1000];
-	fgets(line, 300, file);
-	while(!feof(fp)){
-		char*splitter[50];
-		while(line[i] != '\0'){
-			
+void* scheduler(void * useless){
+	while(true){
+		cout << "test" << buffer.size() << endl;
+		pthread_mutex_lock(&mutex1);
+		while(buffer.empty()){
+			pthread_cond_wait(&full, &mutex1);
 		}
-	}*/
-	
-	ifstream in(argv[2]);
+		shared *obj = buffer.front();
+		buffer.pop();
+		pthread_cond_signal(&empty);
+		pthread_mutex_unlock(&mutex1);
+		if(obj -> operation == 1){
+			cout << "write detected" << endl;
+		}
+		if(obj -> operation == 2){
+			cout << "shutdown detected" << endl;
+			break;
+
+		}
+	}
+	return NULL;
+}
+
+void* parser(void *file){
+	cout << "test: " << (char*)file <<endl;
+	ifstream in((char*)file);
 	if(!in){
 		cout << "cannot open input file" << endl;
 		exit(1);
@@ -91,9 +75,113 @@ int main(int args, char* argv[]){
 			char test1[33];
 			strcpy(test1, array[2].c_str());
 			import(test, test1);
+		}else if(array[0] == "SHUTDOWN"){
+			shared *myShared = new shared;
+			myShared -> operation = 2;
+			add_to_buffer(myShared);
 		}
 	}
+	cout << "out " << endl;
+	in.close();
+	return NULL;
+}
+
+int main(int args, char** argv){
+	
+	if(args < 2 || args > 6){
+		fprintf(stderr, "invalid usage\n");
+		exit(1);
+	}else{
+		//TODO: fix this
+		//ifstream ifile(argv[1]);
+		/*if(!ifile){
+			fprintf(stderr, "disk file does not exist\n");
+		}*/
+	}
+	disk_name = argv[1];
+	
+	loader* init = new loader();
+	init->load_sb(argv[1]);
+	init->initialize(argv[1]);
+	init->load_inode_map(argv[1]);
+	init->load_fbl(argv[1]);
+	init->load_inodes(argv[1]);
+	delete init;
+
+	if(args == 3){
+		pthread_t scheduler_thread;
+		pthread_create(&scheduler_thread, NULL, scheduler, (void*)argv[1]);
+		pthread_t thread_one;
+		pthread_create(&thread_one, NULL, parser, (void*)argv[2]);
+		pthread_join(thread_one, NULL);	
+		pthread_join(scheduler_thread, NULL);
+	}
+	else if(args == 4){
+		cout << "here" << endl;
+		pthread_t scheduler_thread;
+		pthread_create(&scheduler_thread, NULL, scheduler, (void*)argv[1]);
+		pthread_t thread_two;
+		pthread_create(&thread_two, NULL, parser, (void*)argv[3]);	
+		pthread_t thread_one;
+		pthread_create(&thread_one, NULL, parser, (void*)argv[2]);
+
+		pthread_join(thread_two, NULL);	
+		pthread_join(thread_one, NULL);	
+		pthread_join(scheduler_thread, NULL);
+
+	}
+	else if(args == 5){
+		pthread_t scheduler_thread;
+		pthread_create(&scheduler_thread, NULL, scheduler, (void*)argv[1]);
+		pthread_t thread_three;
+		pthread_create(&thread_three, NULL, parser, (void*)argv[4]);	
+		pthread_t thread_two;
+		pthread_create(&thread_two, NULL, parser, (void*)argv[3]);	
+		pthread_t thread_one;
+		pthread_create(&thread_one, NULL, parser, (void*)argv[2]);
+		pthread_join(thread_three, NULL);
+		pthread_join(thread_two, NULL);	
+		pthread_join(thread_one, NULL);	
+		pthread_join(scheduler_thread, NULL);
+
+	}
+	else if(args == 6){
+		pthread_t scheduler_thread;
+		pthread_create(&scheduler_thread, NULL, scheduler, (void*)argv[1]);
+		pthread_t thread_four;
+		pthread_create(&thread_four, NULL, parser, (void*)argv[5]);	
+		pthread_t thread_three;
+		pthread_create(&thread_three, NULL, parser, (void*)argv[4]);	
+		pthread_t thread_two;
+		pthread_create(&thread_two, NULL, parser, (void*)argv[3]);	
+		pthread_t thread_one;
+		pthread_create(&thread_one, NULL, parser, (void*)argv[2]);
+		pthread_join(thread_four, NULL);
+		pthread_join(thread_three, NULL);
+		pthread_join(thread_two, NULL);	
+		pthread_join(thread_one, NULL);	
+		pthread_join(scheduler_thread, NULL);
+
+	}
+	/*while(true){
+		cout << buffer.size() << endl;
+		pthread_mutex_lock(&mutex1);
+		while(buffer.empty()){
+			pthread_cond_wait(&full, &mutex1);
+		}
+		shared *obj = buffer.front();
+		buffer.pop();
+		pthread_cond_signal(&empty);
+		pthread_mutex_unlock(&mutex1);
+		if(obj -> operation == 2){
+			cout << "in op " << endl;
+			break;
+
+		}
+	}*/
+
+
 	write_inode_map();
 	write_fbl();
-	return 0;	 	
+	return 0;	
 }

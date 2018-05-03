@@ -2,6 +2,11 @@
 #include <iostream>
 #include <bits/stdc++.h>
 #include <sys/stat.h>
+
+pthread_mutex_t mutex1, mutex2;
+pthread_cond_t full, empty;
+int in, out;
+queue<shared*> buffer;
 superblock sb;
 int inode_map[256];
 vector<inode*> inode_mem;
@@ -329,6 +334,7 @@ void import(char ssfs_file_name[], char unix_file_name[]){
 	int count = 0; // determine if we need to move to the next indirect block
 	int indirect_block;
 	int next = 0;
+	int inext = 0;
 	for(int j = 0; j < num_blocks; j++){
 		if(j < 12){
 			inode_mem[inode_index]->direct_ptrs[j] = freeBlocks.at(j);
@@ -341,7 +347,14 @@ void import(char ssfs_file_name[], char unix_file_name[]){
 			}else{
 	//TODO			//write free blocks into the ptr's block
 				// pass to the scheduler thread to write to the disk file
-				fwrite(&freeBlocks.at(j), sizeof(int), 1, fp);
+
+				char *buff = new char[5];
+				int block_to_write = sb.offset + freeBlocks.at(j)*sb.block_size;
+				string s = to_string(block_to_write);
+				strcpy(buff, s.c_str());
+				shared *myShared = set_shared_struct(1, inode_mem[inode_index]->indirect_ptrs * sb.block_size + (sb.block_size * inext), buff);
+				add_to_buffer(myShared);	
+				inext++;
 			}
 			
 		}else{
@@ -357,13 +370,20 @@ void import(char ssfs_file_name[], char unix_file_name[]){
 				if(count == 0/*count % num_indirect == 0*/){
 				//cout << " in here???" << endl;
 					fseek(fp, (inode_mem[inode_index]->dindirect_ptrs * sb.block_size) + (sb.block_size * next), SEEK_SET);
-					fwrite(&freeBlocks.at(j), sizeof(int), 1, fp);
+					/*shared *myShared;
+					myShared -> operation = 1;
+					char *buff = new char[sb.block_size];
+					strcpy(buff, (freeBlocks.at(j)));
+					myShared -> data = buff;
+					myShared -> block_num = inode_mem[inode_index]->dindirect_ptrs * sb.block_size + (sb.block_size * next);*/
+				       		
+					/*fwrite(&freeBlocks.at(j), sizeof(int), 1, fp);
 					indirect_block = freeBlocks.at(j);
-					fseek(fp, (freeBlocks.at(j) * sb.block_size), SEEK_SET);
+					fseek(fp, (freeBlocks.at(j) * sb.block_size), SEEK_SET);*/
 					next++;
 				}else{
 					//cout << freeBlocks.at(j) << "double indirect " << endl;
-					fwrite(&freeBlocks.at(j), sizeof(int), 1, fp);
+					//fwrite(&freeBlocks.at(j), sizeof(int), 1, fp);
 					//count++;
 				}
 				count++;
@@ -475,4 +495,24 @@ int find_inode_index(char ssfs_file_name[]){
 		}
 	}
 	return inode_index;
+}
+
+void add_to_buffer(shared *myShared){
+	pthread_mutex_lock(&mutex2);
+
+	if(buffer.size() == 8){
+		pthread_cond_wait(&empty, &mutex2);
+	}
+	buffer.push(myShared);
+	pthread_cond_signal(&full);
+	
+	pthread_mutex_unlock(&mutex2);
+}
+
+shared* set_shared_struct(int operation, int block_num, char *data){
+	shared *myShared = new shared;
+	myShared -> operation = operation;
+	myShared -> block_num = block_num;
+	myShared -> data = data;
+	return myShared;
 }

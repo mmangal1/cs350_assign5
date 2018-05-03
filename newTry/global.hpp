@@ -4,10 +4,18 @@
 #include "super_block.hpp"
 #include <vector>
 #include <string>
+#include <queue>
+#include <pthread.h>
 #include "inode.hpp"
+#include "shared.hpp"
 
 using namespace std;
-
+extern pthread_mutex_t mutex1;
+extern pthread_mutex_t mutex2;
+extern pthread_cond_t full, empty;
+extern int in;
+extern int out;
+extern queue<shared*> buffer;
 extern superblock sb;
 extern int inode_map[256];
 extern vector<inode*> inode_mem; //inodes on disk
@@ -21,6 +29,8 @@ extern string disk_name;
 extern void write_fbl();
 extern void write_inode_map();
 extern void write_inode_to_disk(inode *node, int index);
+extern void add_to_buffer(shared *myShared);
+extern shared* set_shared_struct(int operation, int block_num, char *data);
 
 /* COMMANDS */
 extern void create(char ssfs_file_name[]);
