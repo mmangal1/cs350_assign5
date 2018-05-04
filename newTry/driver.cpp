@@ -13,7 +13,6 @@ using namespace std;
 
 void* scheduler(void * useless){
 	while(true){
-		cout << "test" << buffer.size() << endl;
 		pthread_mutex_lock(&mutex1);
 		while(buffer.empty()){
 			pthread_cond_wait(&full, &mutex1);
@@ -22,10 +21,34 @@ void* scheduler(void * useless){
 		buffer.pop();
 		pthread_cond_signal(&empty);
 		pthread_mutex_unlock(&mutex1);
-		if(obj -> operation == 1){
-			cout << "write detected" << endl;
+		if(obj -> operation == 0){
+			FILE *fp = fopen(disk_name.c_str(), "rb");
+			fseek(fp, obj -> block_num, SEEK_SET);
+			if(obj -> readInt){
+				fread(&(obj -> myInt), 4, 1, fp);
+			}else{
+				fread((obj -> data), obj -> size, 1, fp);
+			}
+			fclose(fp);
+			obj -> done = true;
+			pthread_cond_signal(&(obj ->condition));
 		}
-		if(obj -> operation == 2){
+		else if(obj -> operation == 1){
+			FILE *fp = fopen(disk_name.c_str(), "rb+");
+			fseek(fp, obj -> block_num, SEEK_SET);
+			//cout << "test: " << obj -> block_num << endl;
+			if(obj -> readInt){
+				cout << "test: " << obj -> myInt << endl; 
+				fwrite(&(obj -> myInt), 4, 1, fp);
+			}else{
+				fwrite((obj -> data), obj -> size, 1, fp);
+			}
+			fclose(fp);
+			obj -> done = true;
+			pthread_cond_signal(&(obj -> condition));
+			//cout << "write detected" << endl;
+		}
+		else if(obj -> operation == 2){
 			cout << "shutdown detected" << endl;
 			break;
 
@@ -35,7 +58,6 @@ void* scheduler(void * useless){
 }
 
 void* parser(void *file){
-	cout << "test: " << (char*)file <<endl;
 	ifstream in((char*)file);
 	if(!in){
 		cout << "cannot open input file" << endl;
@@ -86,7 +108,6 @@ void* parser(void *file){
 			cat(test);
 		}
 	}
-	cout << "out " << endl;
 	in.close();
 	return NULL;
 }

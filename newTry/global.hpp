@@ -30,7 +30,8 @@ extern void write_fbl();
 extern void write_inode_map();
 extern void write_inode_to_disk(inode *node, int index);
 extern void add_to_buffer(shared *myShared);
-extern shared* set_shared_struct(int operation, int block_num, char *data);
+extern shared* set_shared_struct(int operation, int block_num, char *data, int size, bool readInt, int num);
+extern int get_ptr_to_the_block_we_need_to_read(int inode_index, int find_block);
 
 /* COMMANDS */
 extern void create(char ssfs_file_name[]);
