@@ -36,9 +36,10 @@ void* scheduler(void * useless){
 		else if(obj -> operation == 1){
 			FILE *fp = fopen(disk_name.c_str(), "rb+");
 			fseek(fp, obj -> block_num, SEEK_SET);
+			//cout << "ftell : " << ftell(fp) << endl;
 			//cout << "test: " << obj -> block_num << endl;
 			if(obj -> readInt){
-				cout << "test: " << obj -> myInt << endl; 
+				//cout << "test: " << obj -> myInt << endl; 
 				fwrite(&(obj -> myInt), 4, 1, fp);
 			}else{
 				fwrite((obj -> data), obj -> size, 1, fp);
